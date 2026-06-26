@@ -1,0 +1,56 @@
+{% extends "_base.html" %}
+{% block title %}Скрипты — Настройки агента{% endblock %}
+{% block body %}
+<nav><a href="/admin/">← Настройки агента</a></nav>
+<h2>Скрипты разговора</h2>
+
+{% if ok %}<p style="color:green">✓ {{ ok }}</p>{% endif %}
+{% if err %}<p style="color:red">✗ {{ err }}</p>{% endif %}
+
+<p>
+  <a href="/admin/scripts/new" role="button">+ Новый блок</a>
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Порядок</th>
+      <th>Ключ</th>
+      <th>Название</th>
+      <th>Где используется</th>
+      <th>Тип</th>
+      <th>Активен</th>
+      <th>Изменён</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for b in blocks %}
+    <tr>
+      <td>{{ b.order_index }}</td>
+      <td><code>{{ b.key }}</code></td>
+      <td><strong>{{ b.label }}</strong>{% if b.description %}<br><small>{{ b.description }}</small>{% endif %}</td>
+      <td>
+        {% for s in b.scopes %}<span class="role-badge">{{ s }}</span> {% endfor %}
+      </td>
+      <td>
+        {% if b.is_system %}<span class="role-badge">системный</span>{% else %}пользовательский{% endif %}
+      </td>
+      <td>{{ '✓' if b.is_active else '✗' }}</td>
+      <td><small>{{ b.updated_at.strftime('%Y-%m-%d %H:%M') }}<br>{{ b.updated_by or '—' }}</small></td>
+      <td>
+        <a href="/admin/scripts/{{ b.id }}/edit">✏</a>
+        <a href="/admin/scripts/{{ b.id }}/history">🕓</a>
+        {% if not b.is_system %}
+        <form method="post" action="/admin/scripts/{{ b.id }}/delete" style="display:inline" onsubmit="return confirm('Удалить блок «{{ b.label }}»?')">
+          <button type="submit" class="secondary outline" style="padding:.1rem .4rem;font-size:.75rem">🗑</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<p><small>Системные блоки (как «Главный скрипт») удалить нельзя — только редактировать или восстановить заводские значения.</small></p>
+{% endblock %}

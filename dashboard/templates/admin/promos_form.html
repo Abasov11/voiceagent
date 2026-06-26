@@ -1,0 +1,47 @@
+{% extends "_base.html" %}
+{% block title %}{{ 'Редактировать' if promo else 'Новая' }} акция{% endblock %}
+{% block body %}
+<nav><a href="/admin/promotions">← К акциям</a></nav>
+<h2>{{ 'Редактировать акцию' if promo else 'Новая акция' }}</h2>
+
+<form method="post" action="{{ '/admin/promotions/' ~ promo.id if promo else '/admin/promotions' }}">
+  <label>
+    Название акции
+    <input type="text" name="title" value="{{ promo.title if promo else '' }}" required placeholder="Скидка 20% на летний лагерь">
+    <small>Видно в админке. Агент проговорит этот текст в звонке.</small>
+  </label>
+
+  <label>
+    Текст акции
+    <textarea name="body" rows="4" required placeholder="С 1 июня по 15 августа — две недели лагеря за 140 000 ₸ вместо 160 000 ₸. Действует при оплате до конца мая.">{{ promo.body if promo else '' }}</textarea>
+    <small>То, что агент скажет клиенту. Опишите кратко: что, для кого, до какой даты, что нужно сделать.</small>
+  </label>
+
+  <div class="grid">
+    <label>
+      Активна с (можно оставить пустым = «прямо сейчас»)
+      <input type="datetime-local" name="active_from" value="{{ promo.active_from.strftime('%Y-%m-%dT%H:%M') if promo and promo.active_from else '' }}">
+    </label>
+    <label>
+      Активна до (можно оставить пустым = «без срока»)
+      <input type="datetime-local" name="active_to" value="{{ promo.active_to.strftime('%Y-%m-%dT%H:%M') if promo and promo.active_to else '' }}">
+    </label>
+  </div>
+
+  <label>
+    Где упоминать
+    <select name="scopes">
+      <option value="voice,whatsapp" {% if not promo or ('voice' in promo.scopes and 'whatsapp' in promo.scopes) %}selected{% endif %}>В звонках и в WhatsApp</option>
+      <option value="voice" {% if promo and 'voice' in promo.scopes and 'whatsapp' not in promo.scopes %}selected{% endif %}>Только в звонках</option>
+      <option value="whatsapp" {% if promo and 'whatsapp' in promo.scopes and 'voice' not in promo.scopes %}selected{% endif %}>Только в WhatsApp</option>
+    </select>
+  </label>
+
+  <label>
+    <input type="checkbox" name="is_active" {% if not promo or promo.is_active %}checked{% endif %}>
+    Включена (мастер-выключатель — можно поставить паузу без удаления)
+  </label>
+
+  <button type="submit">{{ 'Сохранить' if promo else 'Создать' }}</button>
+</form>
+{% endblock %}

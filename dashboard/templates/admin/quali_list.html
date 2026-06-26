@@ -1,0 +1,42 @@
+{% extends "_base.html" %}
+{% block title %}Сигналы — Настройки агента{% endblock %}
+{% block body %}
+<nav><a href="/admin/">← Настройки агента</a></nav>
+<h2>Сигналы (квалификация)</h2>
+<p><small>По этим словам агент определяет: <strong>заинтересован</strong>, <strong>отказался</strong> или просит <strong>перезвонить</strong>. Можете править фразы и добавлять свои категории.</small></p>
+
+{% if ok %}<p style="color:green">✓ {{ ok }}</p>{% endif %}
+
+<p><a href="/admin/qualification/new" role="button">+ Новая категория</a></p>
+
+<table>
+  <thead>
+    <tr><th>Тип</th><th>Ключ</th><th>Название</th><th>Фраз</th><th>Активна</th><th>Изменена</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for c in categories %}
+    <tr>
+      <td>
+        {% if c.kind == 'interest' %}<span class="role-badge" style="background:#bef0c2">интерес</span>
+        {% elif c.kind == 'not_interested' %}<span class="role-badge" style="background:#f0d6d6">отказ</span>
+        {% elif c.kind == 'callback' %}<span class="role-badge" style="background:#fff4c4">перезвон</span>
+        {% else %}<span class="role-badge">своё</span>{% endif %}
+      </td>
+      <td><code>{{ c.key }}</code> {% if c.is_system %}<small>(системная)</small>{% endif %}</td>
+      <td><strong>{{ c.label }}</strong></td>
+      <td>{{ c.phrases|length }}</td>
+      <td>{{ '✓' if c.is_active else '✗' }}</td>
+      <td><small>{{ c.updated_at.strftime('%Y-%m-%d %H:%M') }}<br>{{ c.updated_by or '—' }}</small></td>
+      <td>
+        <a href="/admin/qualification/{{ c.id }}/edit">✏</a>
+        {% if not c.is_system %}
+        <form method="post" action="/admin/qualification/{{ c.id }}/delete" style="display:inline" onsubmit="return confirm('Удалить категорию «{{ c.label }}»?')">
+          <button type="submit" class="secondary outline" style="padding:.1rem .4rem;font-size:.75rem">🗑</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

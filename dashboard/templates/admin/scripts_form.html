@@ -1,0 +1,58 @@
+{% extends "_base.html" %}
+{% block title %}{{ 'Редактировать' if block else 'Новый' }} блок — Настройки{% endblock %}
+{% block body %}
+<nav><a href="/admin/scripts">← К списку скриптов</a></nav>
+<h2>{{ 'Редактировать блок' if block else 'Новый блок' }}</h2>
+
+{% if block and block.is_system %}
+<aside><small>⚙ Это <strong>системный блок</strong>. Удалить нельзя, но можно редактировать или восстановить заводские значения.</small></aside>
+{% endif %}
+
+<form method="post" action="{{ '/admin/scripts/' ~ block.id if block else '/admin/scripts' }}">
+  <label>
+    Ключ (slug, латиницей)
+    <input type="text" name="key" value="{{ block.key if block else '' }}" {% if block %}readonly{% else %}required pattern="[a-z0-9_]+" placeholder="summer_camp_2026"{% endif %}>
+    <small>Только латиница, цифры и подчёркивания. Пример: <code>summer_camp_2026</code>. После создания не меняется.</small>
+  </label>
+
+  <label>
+    Название (для админки)
+    <input type="text" name="label" value="{{ block.label if block else '' }}" required placeholder="Информация о летнем лагере 2026">
+  </label>
+
+  <label>
+    Описание (зачем этот блок — для будущих редакторов)
+    <textarea name="description" rows="2">{{ block.description or '' }}</textarea>
+  </label>
+
+  <label>
+    Где использовать
+    <select name="scopes">
+      <option value="voice" {% if block and 'voice' in block.scopes and 'whatsapp' not in block.scopes %}selected{% endif %}>Только в звонках</option>
+      <option value="whatsapp" {% if block and 'whatsapp' in block.scopes and 'voice' not in block.scopes %}selected{% endif %}>Только в WhatsApp</option>
+      <option value="voice,whatsapp" {% if not block or ('voice' in block.scopes and 'whatsapp' in block.scopes) %}selected{% endif %}>В звонках и в WhatsApp</option>
+    </select>
+  </label>
+
+  <label>
+    Порядок (меньше → раньше в промпте)
+    <input type="number" name="order_index" value="{{ block.order_index if block else 100 }}" min="0" max="999">
+  </label>
+
+  <label>
+    <input type="checkbox" name="is_active" {% if not block or block.is_active %}checked{% endif %}>
+    Включён (если выключить — агент будет работать без этого блока)
+  </label>
+
+  <label>
+    Содержимое
+    <textarea name="body" rows="20" required>{{ block.body if block else '' }}</textarea>
+    <small>Это текст, который агент видит в инструкции. Можно использовать переносы строк, маркеры списка, любое форматирование. Чем понятнее агенту — тем лучше он отвечает.</small>
+  </label>
+
+  <button type="submit">{{ 'Сохранить' if block else 'Создать' }}</button>
+  {% if block and block.is_system and block.default_body %}
+  <button type="submit" formaction="/admin/scripts/{{ block.id }}/restore-default" formmethod="post" class="secondary outline" onclick="return confirm('Вернуть заводское значение? Текущая версия сохранится в истории.')">↺ Восстановить дефолт</button>
+  {% endif %}
+</form>
+{% endblock %}

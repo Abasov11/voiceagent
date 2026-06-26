@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Олимп — Дашборд{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Fira Sans', 'system-ui', 'sans-serif'] },
+          colors: {
+            brand: { 50:'#eff6ff', 100:'#dbeafe', 200:'#bfdbfe', 300:'#93c5fd', 400:'#60a5fa', 500:'#3b82f6', 600:'#1e40af', 700:'#1e3a8a', 800:'#1e2d5f', 900:'#0f172a' },
+            amber: { 400:'#fbbf24', 500:'#f59e0b' },
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    [x-cloak] { display: none !important; }
+    .stat-card { transition: box-shadow 0.2s ease; }
+    .stat-card:hover { box-shadow: 0 4px 12px rgba(30,64,175,0.1); }
+    .nav-link { transition: color 0.15s ease, background 0.15s ease; }
+    .nav-link:hover { background: rgba(59,130,246,0.08); }
+    .nav-link.active { color: #1e40af; background: rgba(59,130,246,0.1); font-weight: 500; }
+    .table-row { transition: background 0.15s ease; }
+    .table-row:hover { background: #eff6ff; }
+    input:focus, select:focus, button:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); position: fixed; z-index: 40; }
+      .sidebar.open { transform: translateX(0); }
+    }
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body class="bg-slate-50 font-sans text-slate-900 min-h-screen">
+  <!-- Scroll-to-top button -->
+  <button id="scroll-top-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})"
+    class="fixed bottom-6 right-6 z-50 hidden w-10 h-10 rounded-full bg-brand-600 text-white shadow-lg hover:bg-brand-700 transition-all cursor-pointer items-center justify-center"
+    aria-label="Наверх">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+  </button>
+  <script>
+    (function(){
+      var btn=document.getElementById('scroll-top-btn');
+      window.addEventListener('scroll',function(){
+        btn.style.display=(window.scrollY>300)?'flex':'none';
+      });
+    })();
+  </script>
+
+  {% if user %}
+  <div class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 md:translate-x-0 transition-transform">
+      <div class="p-5 border-b border-slate-100">
+        <h1 class="text-lg font-bold text-brand-600 tracking-tight">Олимп</h1>
+        <p class="text-xs text-slate-400 mt-0.5">Управление звонками</p>
+      </div>
+      <nav class="flex-1 p-3 space-y-1">
+        <a href="/dashboard/" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-700 {% if active_page == 'home' %}active{% endif %}">
+          <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/></svg>
+          Сводка
+        </a>
+        <a href="/dashboard/leads" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-700 {% if active_page == 'leads' %}active{% endif %}">
+          <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          Лиды
+        </a>
+        <a href="/dashboard/manager-calls" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-700 {% if active_page == 'manager_calls' %}active{% endif %}">
+          <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+          Звонки менеджеров
+        </a>
+        {% if user.role in ['owner','director','rop'] %}
+        <a href="/dashboard/zvonar" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-700 {% if active_page == 'zvonar' %}active{% endif %}">
+          <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M19 14.5l-2.47 2.47a2.25 2.25 0 01-1.59.659H9.06a2.25 2.25 0 01-1.591-.659L5 14.5m14 0V19a2 2 0 01-2 2H7a2 2 0 01-2-2v-4.5"/></svg>
+          AI-звонарь
+        </a>
+        {% endif %}
+        {% if user.role in ['owner','director'] %}
+        <div class="pt-4 mt-4 border-t border-slate-100">
+          <p class="px-3 text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Настройки</p>
+          <a href="/admin/" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-700 {% if active_page == 'admin' %}active{% endif %}">
+            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Настройки агента
+          </a>
+        </div>
+        {% endif %}
+        {% if user.role == 'owner' %}
+        <a href="/dashboard/users" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-700 {% if active_page == 'users' %}active{% endif %}">
+          <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          Учётки
+        </a>
+        {% endif %}
+        {% if user.role in ['owner','director'] %}
+        <div class="pt-4 mt-4 border-t border-slate-100">
+          <p class="px-3 text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Справка</p>
+          <a href="/admin/help" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-700 {% if active_page == 'help' %}active{% endif %}">
+            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>
+            Руководство
+          </a>
+        </div>
+        {% endif %}
+      </nav>
+      <!-- User info at bottom -->
+      <div class="p-4 border-t border-slate-100">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center text-sm font-medium">
+            {{ (user.full_name or user.email)[0]|upper }}
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-slate-700 truncate">{{ user.full_name or user.email }}</p>
+            <p class="text-xs text-slate-400">{{ user.role }}</p>
+          </div>
+          <form method="post" action="/dashboard/logout">
+            <button type="submit" class="cursor-pointer p-1.5 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors" title="Выход" aria-label="Выйти из аккаунта">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            </button>
+          </form>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Mobile menu button -->
+    <button onclick="document.getElementById('sidebar').classList.toggle('open')" class="md:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-md border border-slate-200 cursor-pointer" aria-label="Меню">
+      <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+
+    <!-- Main content -->
+    <main class="flex-1 min-w-0 overflow-auto">
+      <div class="p-4 sm:p-6 lg:p-8 max-w-7xl">
+        {% block body %}{% endblock %}
+      </div>
+    </main>
+  </div>
+  {% else %}
+    {% block body_noauth %}{% endblock %}
+  {% endif %}
+</body>
+</html>

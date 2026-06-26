@@ -1,0 +1,29 @@
+{% extends "_base.html" %}
+{% block title %}История — {{ block.label }}{% endblock %}
+{% block body %}
+<nav><a href="/admin/scripts/{{ block.id }}/edit">← Редактирование</a></nav>
+<h2>История изменений: {{ block.label }}</h2>
+<p><small>Каждое сохранение создаёт версию. Можно вернуться к любой.</small></p>
+
+{% if not versions %}
+<p><em>Изменений ещё не было.</em></p>
+{% endif %}
+
+<table>
+  <thead><tr><th>Когда</th><th>Кто</th><th>Превью</th><th></th></tr></thead>
+  <tbody>
+    {% for v in versions %}
+    <tr>
+      <td><small>{{ v.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</small></td>
+      <td><small>{{ v.updated_by or '—' }}</small></td>
+      <td><pre style="max-height:8em;overflow:auto;white-space:pre-wrap;font-size:.75rem">{{ v.body[:600] }}{% if v.body|length > 600 %}…{% endif %}</pre></td>
+      <td>
+        <form method="post" action="/admin/scripts/{{ block.id }}/restore/{{ v.id }}" onsubmit="return confirm('Вернуться к этой версии?')">
+          <button type="submit" class="secondary outline" style="padding:.2rem .6rem">↺ Вернуть</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

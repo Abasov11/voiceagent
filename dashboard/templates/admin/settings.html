@@ -1,0 +1,34 @@
+{% extends "_base.html" %}
+{% block title %}Настройки — Имя и голос агента{% endblock %}
+{% block body %}
+<nav><a href="/admin/">← Настройки агента</a></nav>
+<h2>Имя и голос агента</h2>
+
+{% if ok %}<p style="color:green">✓ {{ ok }}</p>{% endif %}
+
+<form method="post" action="/admin/settings">
+  <label>
+    Имя агента
+    <input type="text" name="agent_name" value="{{ values.agent_name }}" placeholder="Камила">
+    <small>Как агент представляется в начале звонка.</small>
+  </label>
+
+  <label>
+    Название школы (как агент произносит)
+    <input type="text" name="school_name" value="{{ values.school_name }}" placeholder="Олимп">
+  </label>
+
+  <label>
+    Город
+    <input type="text" name="city" value="{{ values.city }}" placeholder="Алматы">
+  </label>
+
+  <label>
+    Голос ElevenLabs (Voice ID)
+    <input type="text" name="voice_id" value="{{ values.voice_id }}" placeholder="cjVigY5qzO86Huf0OWal">
+    <small>ID голоса можно взять в кабинете ElevenLabs (Voices → выбрать голос → Copy Voice ID). Текущий по умолчанию — Eric.</small>
+  </label>
+
+  <button type="submit">Сохранить</button>
+</form>
+{% endblock %}

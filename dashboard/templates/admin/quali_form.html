@@ -1,0 +1,51 @@
+{% extends "_base.html" %}
+{% block title %}{{ 'Редактировать' if category else 'Новая' }} категория — Сигналы{% endblock %}
+{% block body %}
+<nav><a href="/admin/qualification">← К сигналам</a></nav>
+<h2>{{ 'Редактировать категорию' if category else 'Новая категория' }}</h2>
+
+{% if category and category.is_system %}
+<aside><small>⚙ <strong>Системная категория</strong> — удалить нельзя, но можно править фразы или восстановить заводские.</small></aside>
+{% endif %}
+
+<form method="post" action="{{ '/admin/qualification/' ~ category.id if category else '/admin/qualification' }}">
+  <label>
+    Ключ (slug, латиницей)
+    <input type="text" name="key" value="{{ category.key if category else '' }}" {% if category %}readonly{% else %}required pattern="[a-z0-9_]+" placeholder="winter_camp_interest"{% endif %}>
+  </label>
+
+  <label>
+    Название
+    <input type="text" name="label" value="{{ category.label if category else '' }}" required placeholder="Интерес к зимнему лагерю">
+  </label>
+
+  <label>
+    Тип
+    <select name="kind" required>
+      <option value="interest" {% if category and category.kind == 'interest' %}selected{% endif %}>Сигнал интереса (записать клиента)</option>
+      <option value="not_interested" {% if category and category.kind == 'not_interested' %}selected{% endif %}>Сигнал отказа (не звонить)</option>
+      <option value="callback" {% if category and category.kind == 'callback' %}selected{% endif %}>Просьба перезвонить</option>
+      <option value="custom" {% if category and category.kind == 'custom' %}selected{% endif %}>Своя метка (засчитывается как интерес)</option>
+    </select>
+  </label>
+
+  <label>
+    Фразы (по одной на строке)
+    <textarea name="phrases" rows="12" placeholder="лагер
+поток
+программа
+хочу записать">{% if category %}{{ category.phrases|join('\n') }}{% endif %}</textarea>
+    <small>Достаточно фрагмента слова — например <code>лагер</code> сработает на «лагерь», «лагере», «лагеря». Регистр игнорируется.</small>
+  </label>
+
+  <label>
+    <input type="checkbox" name="is_active" {% if not category or category.is_active %}checked{% endif %}>
+    Активна
+  </label>
+
+  <button type="submit">{{ 'Сохранить' if category else 'Создать' }}</button>
+  {% if category and category.is_system and category.default_phrases %}
+  <button type="submit" formaction="/admin/qualification/{{ category.id }}/restore-default" formmethod="post" class="secondary outline" onclick="return confirm('Вернуть заводские фразы?')">↺ Восстановить дефолт</button>
+  {% endif %}
+</form>
+{% endblock %}

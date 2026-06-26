@@ -1,0 +1,47 @@
+{% extends "_base.html" %}
+{% block title %}Проверка — Настройки агента{% endblock %}
+{% block body %}
+<nav><a href="/admin/">← Настройки агента</a></nav>
+<h2>Проверка настроек</h2>
+<p><small>Введите фразу, которую сказал бы клиент, и посмотрите как агент отреагирует с текущими настройками.</small></p>
+
+<form method="post" action="/admin/preview">
+  <div class="grid">
+    <label>
+      Имя клиента (опционально)
+      <input type="text" name="client_name" value="{{ result.client_name if result else '' }}" placeholder="Динара">
+    </label>
+  </div>
+  <label>
+    Что сказал клиент
+    <textarea name="transcript" rows="3" placeholder="Здравствуйте, хотел узнать про летний лагерь, какие потоки есть?">{{ result.transcript if result else '' }}</textarea>
+  </label>
+  <button type="submit">▶ Прогнать</button>
+</form>
+
+{% if result %}
+<hr>
+<h3>Результат</h3>
+
+{% if result.qualification %}
+<article>
+  <header><strong>🎯 Классификация фразы клиента</strong></header>
+  <p>Решение: <strong>{{ result.qualification.outcome }}</strong></p>
+  <p>Сработавшие сигналы:</p>
+  <ul>
+    {% for r in result.qualification.reasons %}<li><code>{{ r }}</code></li>{% endfor %}
+  </ul>
+</article>
+{% endif %}
+
+<details>
+  <summary><strong>📜 Полный system prompt агента</strong> ({{ result.system_prompt|length }} символов)</summary>
+  <pre style="white-space:pre-wrap;font-size:.8rem;max-height:400px;overflow:auto">{{ result.system_prompt }}</pre>
+</details>
+
+<details open>
+  <summary><strong>💬 Превью WhatsApp-сообщения</strong></summary>
+  <pre style="white-space:pre-wrap;font-size:.85rem;background:#e6f7d9;padding:1rem;border-radius:.5rem">{{ result.whatsapp }}</pre>
+</details>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends "_base.html" %}
+{% block title %}Звонки менеджеров — Олимп{% endblock %}
+{% block body %}
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-900">Звонки менеджеров</h1>
+    <p class="text-sm text-slate-500 mt-0.5">{{ total }} записей</p>
+  </div>
+  {% if user.role in ['owner','director','rop'] %}
+  <a href="/dashboard/manager-calls.csv?{{ {'manager_id':filters.manager_id, 'date_from':filters.date_from, 'date_to':filters.date_to, 'has_transcript':filters.has_transcript}|tojson }}"
+     class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-lg transition-colors">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+    Скачать CSV
+  </a>
+  {% endif %}
+</div>
+
+<!-- Filters -->
+<div class="bg-white rounded-xl border border-slate-200 p-4 mb-4">
+  <form method="get" class="flex flex-col sm:flex-row gap-3 items-end flex-wrap">
+    {% if managers %}
+    <div class="w-44">
+      <label class="block text-xs font-medium text-slate-500 mb-1">Менеджер</label>
+      <select name="manager_id" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm cursor-pointer focus:bg-white focus:border-brand-500 transition-colors">
+        <option value="">Все</option>
+        {% for m in managers %}
+        <option value="{{ m.id }}" {% if filters.manager_id == m.id %}selected{% endif %}>{{ m.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    {% endif %}
+    <div>
+      <label class="block text-xs font-medium text-slate-500 mb-1">С даты</label>
+      <input type="date" name="date_from" value="{{ filters.date_from }}" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:bg-white focus:border-brand-500 transition-colors">
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-slate-500 mb-1">По дату</label>
+      <input type="date" name="date_to" value="{{ filters.date_to }}" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:bg-white focus:border-brand-500 transition-colors">
+    </div>
+    <div class="w-32">
+      <label class="block text-xs font-medium text-slate-500 mb-1">Транскрипт</label>
+      <select name="has_transcript" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm cursor-pointer focus:bg-white focus:border-brand-500 transition-colors">
+        <option value="">Любой</option>
+        <option value="yes" {% if filters.has_transcript=='yes' %}selected{% endif %}>Есть</option>
+        <option value="no" {% if filters.has_transcript=='no' %}selected{% endif %}>Нет</option>
+      </select>
+    </div>
+    <div class="flex gap-2">
+      <button type="submit" class="cursor-pointer px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg transition-colors">Найти</button>
+      <a href="/dashboard/manager-calls" class="cursor-pointer px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-medium rounded-lg transition-colors">Сброс</a>
+    </div>
+  </form>
+</div>
+
+<!-- Table -->
+<div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="bg-slate-50 border-b border-slate-200">
+          <th class="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">ID</th>
+          <th class="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Дата</th>
+          <th class="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Менеджер</th>
+          <th class="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Телефон</th>
+          <th class="text-right py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Длит.</th>
+          <th class="text-center py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Запись</th>
+          <th class="text-center py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Текст</th>
+          <th class="text-right py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Балл</th>
+          <th class="text-left py-3 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Воронка</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for c in rows %}
+        <tr class="table-row cursor-pointer" onclick="window.location='/dashboard/manager-calls/{{ c.id }}'">
+          <td class="py-3 px-4 text-brand-600 font-medium">{{ c.id }}</td>
+          <td class="py-3 px-4 text-slate-600 text-xs whitespace-nowrap">{{ c.started_at.strftime('%d.%m %H:%M') if c.started_at }}</td>
+          <td class="py-3 px-4 text-slate-700">{{ c.manager.name if c.manager else '—' }}</td>
+          <td class="py-3 px-4 text-slate-600">{{ c.phone or '' }}</td>
+          <td class="py-3 px-4 text-right text-slate-600">{{ c.duration_s }}с</td>
+          <td class="py-3 px-4 text-center">
+            {% set url = c.recording_url_cloudinary or c.recording_url_remote %}
+            {% if url %}<audio controls preload="none" class="h-6 max-w-[160px]" onclick="event.stopPropagation()"><source src="{{ url }}"></audio>{% else %}<span class="text-slate-300">&mdash;</span>{% endif %}
+          </td>
+          <td class="py-3 px-4 text-center">
+            {% if c.transcript %}<span class="inline-flex w-5 h-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-xs font-bold" title="{{ c.transcript.text[:200] }}">+</span>
+            {% else %}<span class="text-slate-300">&mdash;</span>{% endif %}
+          </td>
+          <td class="py-3 px-4 text-right font-medium">{% if c.summary %}<span class="{% if c.summary.total_score >= 7 %}text-emerald-600{% elif c.summary.total_score >= 4 %}text-amber-600{% else %}text-red-500{% endif %}">{{ '%.1f'|format(c.summary.total_score) }}</span>{% else %}<span class="text-slate-300">&mdash;</span>{% endif %}</td>
+          <td class="py-3 px-4">{% if c.summary and c.summary.funnel_stage %}<span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-brand-50 text-brand-700">{{ c.summary.funnel_stage }}</span>{% else %}<span class="text-slate-300">&mdash;</span>{% endif %}</td>
+        </tr>
+        {% endfor %}
+        {% if rows|length == 0 %}
+        <tr><td colspan="9" class="py-12 text-center text-slate-400">Звонков пока нет</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+  <div class="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-slate-50">
+    <div class="text-xs text-slate-500">Стр. {{ page + 1 }} из {{ ((total - 1) // page_size) + 1 if total else 1 }}</div>
+    <div class="flex gap-2">
+      {% if page > 0 %}<a href="?{% for k,v in filters.items() %}{{ k }}={{ v }}&{% endfor %}page={{ page - 1 }}" class="px-3 py-1.5 bg-white border border-slate-200 rounded-md text-sm text-slate-700 hover:bg-slate-50 cursor-pointer">&larr; Назад</a>{% endif %}
+      {% if (page + 1) * page_size < total %}<a href="?{% for k,v in filters.items() %}{{ k }}={{ v }}&{% endfor %}page={{ page + 1 }}" class="px-3 py-1.5 bg-white border border-slate-200 rounded-md text-sm text-slate-700 hover:bg-slate-50 cursor-pointer">Далее &rarr;</a>{% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+{
+  "_doc": "Golden file для e2e dialogue-simulator. Каждая запись = ожидаемый outcome от shared/qualification.classify по фикстуре. Источник истины для регрессий — обновлять только при намеренной правке qualification rules.",
+  "fixtures": {
+    "dialog_interested.txt": "interested",
+    "dialog_camp_interested.txt": "interested",
+    "dialog_not_interested.txt": "not_interested",
+    "dialog_objection.txt": "interested",
+    "dialog_silence.txt": "not_interested",
+    "dialog_rude.txt": "not_interested",
+    "dialog_callback.txt": "callback",
+    "dialog_loop_bait.txt": "not_interested",
+    "dialog_warm_lead.txt": "interested"
+  }
+}

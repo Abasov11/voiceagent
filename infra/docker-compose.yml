@@ -1,0 +1,61 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: voiceagent-postgres
+    restart: unless-stopped
+    env_file: ../.env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-voiceagent}
+      POSTGRES_USER: ${POSTGRES_USER:-voiceagent}
+    volumes:
+      - ./postgres/data:/var/lib/postgresql/data
+      - ./postgres/initdb.d:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-voiceagent} -d ${POSTGRES_DB:-voiceagent}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ..
+      dockerfile: infra/backend.Dockerfile
+    container_name: voiceagent-backend
+    restart: unless-stopped
+    env_file: ../.env
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-voiceagent}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-voiceagent}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    expose:
+      - "8000"
+    volumes:
+      - ../shared:/app/shared
+      - ../call_analytics:/app/call_analytics
+      - ../zvonar:/app/zvonar
+      - ../dashboard:/app/dashboard
+      - ../infra/scripts:/app/infra/scripts:ro
+      - ../tests:/app/tests:ro
+      - ../pytest.ini:/app/pytest.ini:ro
+      - tts-audio:/var/www/tts-audio
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: voiceagent-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/letsencrypt:/etc/letsencrypt:ro
+      - ./nginx/www:/var/www:ro
+      - tts-audio:/srv/tts-audio:ro
+    depends_on:
+      - backend
+
+volumes:
+  tts-audio:

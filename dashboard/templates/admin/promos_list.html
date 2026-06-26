@@ -1,0 +1,48 @@
+{% extends "_base.html" %}
+{% block title %}Акции — Настройки агента{% endblock %}
+{% block body %}
+<nav><a href="/admin/">← Настройки агента</a></nav>
+<h2>Акции и промо</h2>
+<p><small>Активные акции автоматически попадают в скрипт звонка и в WhatsApp-сообщения. По истечении даты — выключаются сами.</small></p>
+
+{% if ok %}<p style="color:green">✓ {{ ok }}</p>{% endif %}
+
+<p><a href="/admin/promotions/new" role="button">+ Новая акция</a></p>
+
+<table>
+  <thead>
+    <tr><th>Состояние</th><th>Название</th><th>Период</th><th>Где</th><th>Изменена</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for p in promos %}
+    {% set live = p.is_active
+        and (p.active_from is none or p.active_from <= now)
+        and (p.active_to is none or p.active_to >= now) %}
+    {% set expired = p.is_active and p.active_to is not none and p.active_to < now %}
+    {% set scheduled = p.is_active and p.active_from is not none and p.active_from > now %}
+    <tr>
+      <td>
+        {% if not p.is_active %}<span class="role-badge">выключена</span>
+        {% elif live %}<span class="role-badge" style="background:#bef0c2">🟢 идёт сейчас</span>
+        {% elif scheduled %}<span class="role-badge" style="background:#cfe7ff">⏳ запланирована</span>
+        {% elif expired %}<span class="role-badge" style="background:#f0d6d6">истекла</span>
+        {% endif %}
+      </td>
+      <td><strong>{{ p.title }}</strong><br><small>{{ p.body[:120] }}{% if p.body|length > 120 %}…{% endif %}</small></td>
+      <td><small>
+        {{ p.active_from.strftime('%Y-%m-%d %H:%M') if p.active_from else 'без начала' }}<br>→
+        {{ p.active_to.strftime('%Y-%m-%d %H:%M') if p.active_to else 'без срока' }}
+      </small></td>
+      <td>{% for s in p.scopes %}<span class="role-badge">{{ s }}</span> {% endfor %}</td>
+      <td><small>{{ p.updated_at.strftime('%Y-%m-%d %H:%M') }}<br>{{ p.updated_by or '—' }}</small></td>
+      <td>
+        <a href="/admin/promotions/{{ p.id }}/edit">✏</a>
+        <form method="post" action="/admin/promotions/{{ p.id }}/delete" style="display:inline" onsubmit="return confirm('Удалить акцию «{{ p.title }}»?')">
+          <button type="submit" class="secondary outline" style="padding:.1rem .4rem;font-size:.75rem">🗑</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
